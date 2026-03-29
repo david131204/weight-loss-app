@@ -11,6 +11,14 @@ import {
   View,
 } from 'react-native';
 
+const COLORS = {
+  primary: '#007AFF',
+  background: '#eef6ff',
+  card: '#ffffff',
+  text: '#1c1c1e',
+  border: '#d0d7de',
+};
+
 export default function Home() {
 const [weight, setWeight] = useState('');
 const [height, setHeight] = useState('');
@@ -167,69 +175,84 @@ Weight Loss: {fatLossCalories} kcal
 }
 
 const styles = StyleSheet.create({
-container: {
-flex: 1,
-padding: 20,
-justifyContent: 'center',
-backgroundColor: '#f5f5f5',
-},
-title: {
-fontSize: 26,
-textAlign: 'center',
-marginBottom: 25,
-fontWeight: '600',
-},
-input: {
-borderWidth: 1,
-borderColor: '#333',
-padding: 12,
-marginBottom: 12,
-borderRadius: 6,
-backgroundColor: '#fff',
-},
-label: {
-marginTop: 10,
-marginBottom: 5,
-fontSize: 16,
-},
-row: {
-flexDirection: 'row',
-justifyContent: 'space-around',
-marginBottom: 15,
-},
-option: {
-padding: 10,
-borderWidth: 1,
-borderColor: '#007AFF',
-borderRadius: 6,
-minWidth: 80,
-alignItems: 'center',
-},
-optionText: {
-color: '#007AFF',
-},
-selected: {
-backgroundColor: '#007AFF',
-},
-selectedText: {
-color: '#fff',
-fontWeight: '600',
-},
-button: {
-backgroundColor: '#007AFF',
-padding: 15,
-borderRadius: 6,
-alignItems: 'center',
-marginTop: 10,
-},
-buttonText: {
-color: '#fff',
-fontSize: 16,
-fontWeight: '600',
-},
-result: {
-marginTop: 15,
-fontSize: 18,
-textAlign: 'center',
-},
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: COLORS.background,
+  },
+
+  title: {
+    fontSize: 26,
+    textAlign: 'center',
+    marginBottom: 25,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.card,
+  },
+
+  label: {
+    marginTop: 10,
+    marginBottom: 5,
+    fontSize: 16,
+    color: COLORS.text,
+  },
+
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 15,
+  },
+
+  option: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+  },
+
+  optionText: {
+    color: COLORS.primary,
+  },
+
+  selected: {
+    backgroundColor: COLORS.primary,
+  },
+
+  selectedText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
+  button: {
+    backgroundColor: COLORS.primary,
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  result: {
+    marginTop: 15,
+    fontSize: 18,
+    textAlign: 'center',
+    color: COLORS.text,
+  },
 });
