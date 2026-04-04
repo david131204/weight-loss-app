@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Keyboard,
@@ -20,35 +21,33 @@ const COLORS = {
 };
 
 export default function Home() {
+const router = useRouter();
 const [weight, setWeight] = useState('');
 const [height, setHeight] = useState('');
 const [age, setAge] = useState('');
 const [gender, setGender] = useState<'male' | 'female'>('male');
 const [activity, setActivity] = useState(1.2);
-const [calories, setCalories] = useState<number | null>(null);
-const [fatLossCalories, setFatLossCalories] = useState<number | null>(null);
 
-const calculateCalories = () => {
-const w = parseFloat(weight);
-const h = parseFloat(height);
-const a = parseFloat(age);
+const goToTargetWeight = () => {
+  const w = parseFloat(weight);
+  const h = parseFloat(height);
+  const a = parseFloat(age);
 
-if (isNaN(w) || isNaN(h) || isNaN(a)) {
-alert('Please enter valid numbers');
-return;
-}
+  if (isNaN(w) || isNaN(h) || isNaN(a) || w <= 0 || h <= 0 || a <= 0) {
+    alert('Please enter valid positive numbers');
+    return;
+  }
 
-let bmr;
-if (gender === 'male') {
-bmr = 10 * w + 6.25 * h - 5 * a + 5;
-} else {
-bmr = 10 * w + 6.25 * h - 5 * a - 161;
-}
-
-const tdee = bmr * activity;
-
-setCalories(Math.round(tdee));
-setFatLossCalories(Math.round(tdee - 500));
+  router.push({
+    pathname: '/target-weight',
+    params: {
+      weight: w.toString(),
+      height: h.toString(),
+      age: a.toString(),
+      gender,
+      activity: activity.toString(),
+    },
+  });
 };
 
 return (
@@ -58,7 +57,7 @@ style={{ flex: 1 }}
 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 >
 <View style={styles.container}>
-<Text style={styles.title}>Weight Loss App</Text>
+<Text style={styles.title}>Welcome</Text>
 
 <TextInput
 style={styles.input}
@@ -153,21 +152,10 @@ High
 </Pressable>
 </View>
 
-<Pressable style={styles.button} onPress={calculateCalories}>
-<Text style={styles.buttonText}>Calculate Calories</Text>
+<Pressable style={styles.button} onPress={goToTargetWeight}>
+  <Text style={styles.buttonText}>Continue</Text>
 </Pressable>
 
-{calories !== null && (
-<Text style={styles.result}>
-Maintenance: {calories} kcal
-</Text>
-)}
-
-{fatLossCalories !== null && (
-<Text style={styles.result}>
-Weight Loss: {fatLossCalories} kcal
-</Text>
-)}
 </View>
 </KeyboardAvoidingView>
 </TouchableWithoutFeedback>
@@ -247,12 +235,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-
-  result: {
-    marginTop: 15,
-    fontSize: 18,
-    textAlign: 'center',
-    color: COLORS.text,
   },
 });
