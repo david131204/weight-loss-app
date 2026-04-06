@@ -1,15 +1,15 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableWithoutFeedback,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 
 const COLORS = {
@@ -22,20 +22,28 @@ const COLORS = {
 
 export default function TargetWeight() {
 
+  const router = useRouter();
+
   const params = useLocalSearchParams();
 
   const [targetWeight, setTargetWeight] = useState('');
 
-  const continueNext = () => {
-    const t = parseFloat(targetWeight);
+const continueNext = () => {
+  const t = parseFloat(targetWeight);
 
-    if (isNaN(t) || t <= 0) {
-      alert('Please enter a valid target weight');
-      return;
-    }
+  if (isNaN(t) || t <= 0) {
+    alert('Please enter a valid target weight');
+    return;
+  }
 
-    alert('Next screen coming soon');
-  };
+  router.push({
+    pathname: '/goal-speed',
+    params: {
+      ...params,
+      targetWeight: t.toString(),
+    },
+  });
+};
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
