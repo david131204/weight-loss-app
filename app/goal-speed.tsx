@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 const COLORS = {
@@ -30,7 +30,13 @@ export default function GoalSpeed() {
     return;
   }
 
-  alert(`Selected speed: ${speed} kg per week`);
+  router.push({
+    pathname: '/results',
+    params: {
+      ...(params as any),
+      speed: speed.toString(),
+    },
+  });
 };
 
   return (
