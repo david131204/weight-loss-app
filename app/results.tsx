@@ -1,9 +1,9 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 const COLORS = {
@@ -15,6 +15,7 @@ const COLORS = {
 };
 
 export default function Results() {
+  const router = useRouter();
   const params = useLocalSearchParams();
 
   const weight = parseFloat(params.weight as string);
@@ -67,9 +68,20 @@ export default function Results() {
         <Text style={styles.value}>{speed} kg per week</Text>
       </View>
 
-      <Pressable style={styles.button}>
-        <Text style={styles.buttonText}>Continue</Text>
-      </Pressable>
+<Pressable
+  style={styles.button}
+  onPress={() =>
+    router.push({
+      pathname: '/home' as any,
+      params: {
+        ...(params as any),
+        targetCalories: targetCalories.toString(),
+      },
+    })
+  }
+>
+  <Text style={styles.buttonText}>Continue</Text>
+</Pressable>
     </View>
   );
 }
