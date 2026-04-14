@@ -1,35 +1,52 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function UpdateWeight() {
   const [weight, setWeight] = useState("");
   const router = useRouter();
-  const params = useLocalSearchParams();
 
-  const handleSave = () => {
-    if (!weight) {
-      Alert.alert("Error", "Please enter your weight");
-      return;
-    }
+  const handleSave = async () => {
+  if (!weight.trim()) {
+    Alert.alert("Error", "Please enter your weight");
+    return;
+  }
 
-    Alert.alert("Success", "Weight updated successfully");
+  const parsedWeight = parseFloat(weight);
 
-    router.push({
-      pathname: "/home",
-      params: {
-        ...params,
-        weight,
-      },
-    });
-  };
+  if (isNaN(parsedWeight)) {
+    Alert.alert("Error", "Enter a valid number");
+    return;
+  }
+
+  try {
+    const existing = await AsyncStorage.getItem("weightHistory");
+    let history = existing ? JSON.parse(existing) : [];
+
+    const newEntry = {
+      weight: parsedWeight,
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    history.push(newEntry);
+
+    await AsyncStorage.setItem("weightHistory", JSON.stringify(history));
+
+    Alert.alert("Success", "Weight saved");
+
+    router.replace("/home");
+  } catch (error) {
+    Alert.alert("Error", "Failed to save weight");
+  }
+};
 
   return (
     <View style={styles.container}>

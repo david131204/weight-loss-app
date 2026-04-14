@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Pressable,
@@ -70,15 +71,14 @@ export default function Results() {
 
 <Pressable
   style={styles.button}
-  onPress={() =>
-    router.push({
-      pathname: '/home' as any,
-      params: {
-        ...(params as any),
-        targetCalories: targetCalories.toString(),
-      },
-    })
-  }
+  onPress={async () => {
+  await AsyncStorage.setItem("targetWeight", targetWeight.toString());
+  await AsyncStorage.setItem("speed", speed.toString());
+  await AsyncStorage.setItem("targetCalories", targetCalories.toString());
+  await AsyncStorage.setItem("setupComplete", "true");
+
+  router.replace('/home');
+}}
 >
   <Text style={styles.buttonText}>Continue</Text>
 </Pressable>

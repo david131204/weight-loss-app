@@ -1,18 +1,35 @@
-import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { LineChart } from "react-native-chart-kit";
+
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function Progress() {
+  const [history, setHistory] = useState<any[]>([]);
+  useEffect(() => {
+  const loadHistory = async () => {
+    const data = await AsyncStorage.getItem("weightHistory");
+    if (data) {
+      setHistory(JSON.parse(data));
+    }
+  };
+
+  loadHistory();
+}, []);
   const data = {
-    labels: ["Apr 1", "Apr 4", "Apr 7", "Apr 10"],
+    labels: history.length > 0 ? history.map(e => e.date) : ["No data"],
     datasets: [
       {
-        data: [98.5, 97.9, 97.2, 96.8],
+        data: history.length > 0 ? history.map(e => e.weight) : [0]
       },
     ],
   };
+
+const startingWeight = history.length > 0 ? history[0].weight : 0;
+const currentWeight = history.length > 0 ? history[history.length - 1].weight : 0;
+const change = currentWeight - startingWeight;
 
   return (
     <View style={styles.container}>
@@ -40,9 +57,9 @@ export default function Progress() {
         }}
       />
 
-      <Text style={styles.text}>Starting Weight: 98.5 kg</Text>
-      <Text style={styles.text}>Current Weight: 96.8 kg</Text>
-      <Text style={styles.text}>Total Change: -1.7 kg</Text>
+<Text style={styles.text}>Starting Weight: {startingWeight} kg</Text>
+<Text style={styles.text}>Current Weight: {currentWeight} kg</Text>
+<Text style={styles.text}>Total Change: {change.toFixed(1)} kg</Text>
     </View>
   );
 }

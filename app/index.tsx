@@ -1,5 +1,6 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -22,13 +23,38 @@ const COLORS = {
 
 export default function Home() {
 const router = useRouter();
+
 const [weight, setWeight] = useState('');
 const [height, setHeight] = useState('');
 const [age, setAge] = useState('');
 const [gender, setGender] = useState<'male' | 'female'>('male');
 const [activity, setActivity] = useState(1.2);
+const [checkingSetup, setCheckingSetup] = useState(true);
 
-const goToTargetWeight = () => {
+useEffect(() => {
+  const checkSetup = async () => {
+    try {
+      const setupComplete = await AsyncStorage.getItem("setupComplete");
+
+      if (setupComplete === "true") {
+        router.replace("/home");
+        return;
+      }
+    } catch (error) {
+      console.log("Failed to check setup status");
+    } finally {
+      setCheckingSetup(false);
+    }
+  };
+
+  checkSetup();
+}, []);
+
+if (checkingSetup) {
+  return null;
+}
+
+const goToTargetWeight = async () => {
   const w = parseFloat(weight);
   const h = parseFloat(height);
   const a = parseFloat(age);
@@ -37,6 +63,12 @@ const goToTargetWeight = () => {
     alert('Please enter valid positive numbers');
     return;
   }
+
+await AsyncStorage.setItem("currentWeight", w.toString());
+await AsyncStorage.setItem("height", h.toString());
+await AsyncStorage.setItem("age", a.toString());
+await AsyncStorage.setItem("gender", gender);
+await AsyncStorage.setItem("activity", activity.toString());
 
   router.push({
     pathname: '/target-weight',
