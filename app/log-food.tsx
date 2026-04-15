@@ -1,15 +1,16 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableWithoutFeedback,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 
 const COLORS = {
@@ -19,38 +20,48 @@ const COLORS = {
   text: '#1c1c1e',
   border: '#d0d7de',
 };
-
+// Screen for logging food and tracking calorie intake
 export default function LogFoodScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
 
   const [foodName, setFoodName] = useState('');
   const [foodCalories, setFoodCalories] = useState('');
+// Save a food entry and persist it using AsyncStorage
+ const addFood = async () => {
+  const caloriesToAdd = parseFloat(foodCalories);
 
-  const addFood = () => {
-    const caloriesToAdd = parseFloat(foodCalories);
-    const currentConsumed = Number(params.consumedCalories || 0);
+  if (!foodName.trim()) {
+    alert('Please enter a food name');
+    return;
+  }
 
-    if (!foodName.trim()) {
-      alert('Please enter a food name');
-      return;
-    }
+  if (isNaN(caloriesToAdd) || caloriesToAdd <= 0) {
+    alert('Please enter valid calories');
+    return;
+  }
 
-    if (isNaN(caloriesToAdd) || caloriesToAdd <= 0) {
-      alert('Please enter valid calories');
-      return;
-    }
+  try {
+    const existing = await AsyncStorage.getItem("foodLog");
+    const foodLog = existing ? JSON.parse(existing) : [];
+// Create new food entry with today's date
+    const newEntry = {
+      name: foodName,
+      calories: caloriesToAdd,
+      date: new Date().toISOString().split("T")[0],
+    };
 
-    const newConsumedCalories = currentConsumed + caloriesToAdd;
+    foodLog.push(newEntry);
 
-    router.push({
-      pathname: '/home' as any,
-      params: {
-        ...(params as any),
-        consumedCalories: newConsumedCalories.toString(),
-      },
-    });
-  };
+    await AsyncStorage.setItem("foodLog", JSON.stringify(foodLog));
+
+    setFoodName('');
+    setFoodCalories('');
+// Return to home so updated calories are shown
+    router.replace('/home');
+  } catch (error) {
+    alert('Failed to save food');
+  }
+};
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

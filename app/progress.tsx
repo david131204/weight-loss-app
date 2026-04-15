@@ -5,7 +5,7 @@ import { LineChart } from "react-native-chart-kit";
 
 
 const screenWidth = Dimensions.get("window").width;
-
+// Displays saved weight history as a progress graph
 export default function Progress() {
   const [history, setHistory] = useState<any[]>([]);
   useEffect(() => {
@@ -18,6 +18,7 @@ export default function Progress() {
 
   loadHistory();
 }, []);
+ // Prepare graph labels and values from saved history
   const data = {
     labels: history.length > 0 ? history.map(e => e.date) : ["No data"],
     datasets: [
@@ -26,7 +27,7 @@ export default function Progress() {
       },
     ],
   };
-
+ // Calculate overall weight change from first to latest entry
 const startingWeight = history.length > 0 ? history[0].weight : 0;
 const currentWeight = history.length > 0 ? history[history.length - 1].weight : 0;
 const change = currentWeight - startingWeight;

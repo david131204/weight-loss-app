@@ -19,7 +19,7 @@ const COLORS = {
   text: '#1c1c1e',
   border: '#d0d7de',
 };
-
+// Screen where the user enters their target weight
 export default function TargetWeight() {
 
   const router = useRouter();

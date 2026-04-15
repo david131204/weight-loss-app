@@ -16,7 +16,7 @@ const COLORS = {
   text: '#1c1c1e',
   border: '#d0d7de',
 };
-
+// Main dashboard showing user stats such as weight and calories
 export default function HomeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -25,14 +25,14 @@ export default function HomeScreen() {
   const [savedTargetWeight, setSavedTargetWeight] = useState<string>("");
   const [savedSpeed, setSavedSpeed] = useState<string>("");
   const [savedTargetCalories, setSavedTargetCalories] = useState<string>("");
-
+// Reload data whenever the screen is opened or focused
   useFocusEffect(
     useCallback(() => {
       const loadStoredData = async () => {
         try {
           const storedHistory = await AsyncStorage.getItem("weightHistory");
           const history = storedHistory ? JSON.parse(storedHistory) : [];
-
+// Use latest weight from history, or fallback to initial setup value
           if (history.length > 0) {
             const latestEntry = history[history.length - 1];
             setSavedWeight(String(latestEntry.weight));
@@ -42,7 +42,7 @@ export default function HomeScreen() {
               setSavedWeight(currentWeightValue);
             }
           }
-
+// Load saved goal data
           const targetWeightValue = await AsyncStorage.getItem("targetWeight");
           const speedValue = await AsyncStorage.getItem("speed");
           const targetCaloriesValue = await AsyncStorage.getItem("targetCalories");
@@ -50,6 +50,17 @@ export default function HomeScreen() {
           if (targetWeightValue) setSavedTargetWeight(targetWeightValue);
           if (speedValue) setSavedSpeed(speedValue);
           if (targetCaloriesValue) setSavedTargetCalories(targetCaloriesValue);
+// Load food log and calculate today's total calories
+          const foodData = await AsyncStorage.getItem("foodLog");
+          const foodLog = foodData ? JSON.parse(foodData) : [];
+
+          const today = new Date().toISOString().split("T")[0];
+
+          const todayCalories = foodLog
+           .filter((item: any) => item.date === today)
+           .reduce((sum: number, item: any) => sum + item.calories, 0);
+
+setConsumedCalories(todayCalories);
         } catch (error) {
           console.log("Failed to load stored data");
         }
@@ -58,7 +69,7 @@ export default function HomeScreen() {
       loadStoredData();
     }, [])
   );
-
+// Clears all saved data and resets app back to setup
   const handleResetData = async () => {
     Alert.alert(
       "Reset Data",
@@ -80,6 +91,7 @@ export default function HomeScreen() {
               "speed",
               "targetCalories",
               "weightHistory",
+              "foodLog",
             ]);
 
             router.replace("/");
@@ -88,9 +100,9 @@ export default function HomeScreen() {
       ]
     );
   };
-
-
-
+// Store today's consumed calories
+const [consumedCalories, setConsumedCalories] = useState(0);
+// Use saved values first, fallback to params if needed
 const currentWeight =
     savedWeight || (params.weight as string) || "No weight recorded";
   const targetWeight =
@@ -98,8 +110,7 @@ const currentWeight =
   const speed = savedSpeed || (params.speed as string) || "Not set";
   const targetCalories =
     savedTargetCalories || (params.targetCalories as string) || "0";
-
-  const consumedCalories = Number(params.consumedCalories || 0);
+// Remaining calories for the day
   const remainingCalories = Number(targetCalories || 0) - consumedCalories;
 
   return (

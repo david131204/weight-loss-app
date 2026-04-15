@@ -16,7 +16,7 @@ const COLORS = {
   text: '#1c1c1e',
   border: '#d0d7de',
 };
-
+// Screen where user selects how fast they want to lose weight
 export default function GoalSpeed() {
 
   const router = useRouter();

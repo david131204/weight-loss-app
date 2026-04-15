@@ -14,11 +14,11 @@ const COLORS = {
   text: '#1c1c1e',
   border: '#d0d7de',
 };
-
+// Displays calculated calorie targets based on user input
 export default function Results() {
   const router = useRouter();
   const params = useLocalSearchParams();
-
+// Retrieve user data passed from previous screens
   const weight = parseFloat(params.weight as string);
   const height = parseFloat(params.height as string);
   const age = parseFloat(params.age as string);
@@ -28,23 +28,23 @@ export default function Results() {
   const speed = parseFloat(params.speed as string);
 
   let bmr = 0;
-
+// Calculate Basal Metabolic Rate using Mifflin-St Jeor formula
   if (gender === 'male') {
     bmr = 10 * weight + 6.25 * height - 5 * age + 5;
   } else {
     bmr = 10 * weight + 6.25 * height - 5 * age - 161;
   }
-
+// Apply activity multiplier to get total daily energy expenditure
   const tdee = bmr * activity;
 
   let calorieDeficit = 0;
-
+// Determine calorie deficit based on selected weight loss speed
   if (speed === 0.5) {
     calorieDeficit = 500;
   } else if (speed === 1) {
     calorieDeficit = 1000;
   }
-
+// Final calorie targets
   const targetCalories = Math.round(tdee - calorieDeficit);
   const maintenanceCalories = Math.round(tdee);
 

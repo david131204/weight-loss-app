@@ -20,7 +20,7 @@ const COLORS = {
   text: '#1c1c1e',
   border: '#d0d7de',
 };
-
+// Initial setup screen where user enters personal details
 export default function Home() {
 const router = useRouter();
 
@@ -30,7 +30,7 @@ const [age, setAge] = useState('');
 const [gender, setGender] = useState<'male' | 'female'>('male');
 const [activity, setActivity] = useState(1.2);
 const [checkingSetup, setCheckingSetup] = useState(true);
-
+// Check if user has already completed setup
 useEffect(() => {
   const checkSetup = async () => {
     try {
@@ -53,7 +53,7 @@ useEffect(() => {
 if (checkingSetup) {
   return null;
 }
-
+// Validate inputs and move to next step in setup
 const goToTargetWeight = async () => {
   const w = parseFloat(weight);
   const h = parseFloat(height);
@@ -63,13 +63,13 @@ const goToTargetWeight = async () => {
     alert('Please enter valid positive numbers');
     return;
   }
-
+// Save initial user data for later use in calculations
 await AsyncStorage.setItem("currentWeight", w.toString());
 await AsyncStorage.setItem("height", h.toString());
 await AsyncStorage.setItem("age", a.toString());
 await AsyncStorage.setItem("gender", gender);
 await AsyncStorage.setItem("activity", activity.toString());
-
+// Navigate to target weight screen with entered data
   router.push({
     pathname: '/target-weight',
     params: {
