@@ -147,7 +147,7 @@ const currentWeight =
         style={styles.button}
         onPress={() =>
           router.push({
-            pathname: '/log-food' as any,
+            pathname: '/food-search' as any,
             params: {
               ...(params as any),
             },
