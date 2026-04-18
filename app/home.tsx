@@ -1,40 +1,47 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   Alert,
+  Dimensions,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { LineChart } from "react-native-chart-kit";
 
+const screenWidth = Dimensions.get("window").width;
+
+// App colour theme
 const COLORS = {
   primary: '#007AFF',
   background: '#eef6ff',
   card: '#ffffff',
   text: '#1c1c1e',
   border: '#d0d7de',
+  muted: '#666',
 };
 // Main dashboard showing user stats such as weight and calories
 export default function HomeScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
 
   const [savedWeight, setSavedWeight] = useState<string>("");
-  const [savedTargetWeight, setSavedTargetWeight] = useState<string>("");
-  const [savedSpeed, setSavedSpeed] = useState<string>("");
   const [savedTargetCalories, setSavedTargetCalories] = useState<string>("");
+  const [history, setHistory] = useState<any[]>([]);
+  const [consumedCalories, setConsumedCalories] = useState(0);
 // Reload data whenever the screen is opened or focused
   useFocusEffect(
     useCallback(() => {
       const loadStoredData = async () => {
         try {
           const storedHistory = await AsyncStorage.getItem("weightHistory");
-          const history = storedHistory ? JSON.parse(storedHistory) : [];
+          const parsedHistory = storedHistory ? JSON.parse(storedHistory) : [];
+          setHistory(parsedHistory);
 // Use latest weight from history, or fallback to initial setup value
-          if (history.length > 0) {
-            const latestEntry = history[history.length - 1];
+          if (parsedHistory.length > 0) {
+          const latestEntry = parsedHistory[parsedHistory.length - 1];
             setSavedWeight(String(latestEntry.weight));
           } else {
             const currentWeightValue = await AsyncStorage.getItem("currentWeight");
@@ -42,14 +49,11 @@ export default function HomeScreen() {
               setSavedWeight(currentWeightValue);
             }
           }
-// Load saved goal data
-          const targetWeightValue = await AsyncStorage.getItem("targetWeight");
-          const speedValue = await AsyncStorage.getItem("speed");
-          const targetCaloriesValue = await AsyncStorage.getItem("targetCalories");
-
-          if (targetWeightValue) setSavedTargetWeight(targetWeightValue);
-          if (speedValue) setSavedSpeed(speedValue);
-          if (targetCaloriesValue) setSavedTargetCalories(targetCaloriesValue);
+          // Load calorie target
+          const calories = await AsyncStorage.getItem("targetCalories");
+          if (calories) {
+            setSavedTargetCalories(calories);
+          }
 // Load food log and calculate today's total calories
           const foodData = await AsyncStorage.getItem("foodLog");
           const foodLog = foodData ? JSON.parse(foodData) : [];
@@ -60,9 +64,9 @@ export default function HomeScreen() {
            .filter((item: any) => item.date === today)
            .reduce((sum: number, item: any) => sum + item.calories, 0);
 
-setConsumedCalories(todayCalories);
+          setConsumedCalories(todayCalories);
         } catch (error) {
-          console.log("Failed to load stored data");
+          console.log("Failed to load data");
         }
       };
 
@@ -100,94 +104,130 @@ setConsumedCalories(todayCalories);
       ]
     );
   };
-// Store today's consumed calories
-const [consumedCalories, setConsumedCalories] = useState(0);
-// Use saved values first, fallback to params if needed
-const currentWeight =
-    savedWeight || (params.weight as string) || "No weight recorded";
-  const targetWeight =
-    savedTargetWeight || (params.targetWeight as string) || "Not set";
-  const speed = savedSpeed || (params.speed as string) || "Not set";
-  const targetCalories =
-    savedTargetCalories || (params.targetCalories as string) || "0";
-// Remaining calories for the day
-  const remainingCalories = Number(targetCalories || 0) - consumedCalories;
+// Calculate calories left for today
+  const remainingCalories =
+    Number(savedTargetCalories || 0) - consumedCalories;
+// Weight chart values
+  const startingWeight =
+    history.length > 0 ? history[0].weight : Number(savedWeight || 0);
 
+  const currentWeight =
+    history.length > 0
+      ? history[history.length - 1].weight
+      : Number(savedWeight || 0);
+
+  const change = currentWeight - startingWeight;
+
+  // Chart data
+  const chartData = {
+    labels:
+      history.length > 0
+        ? history.map((item: any) => item.date)
+        : ["Start"],
+    datasets: [
+      {
+        data:
+          history.length > 0
+            ? history.map((item: any) => item.weight)
+            : [Number(savedWeight || 0)],
+      },
+    ],
+  };
   return (
-    <View style={styles.container}>
+  <ScrollView
+    style={styles.container}
+    contentContainerStyle={{ paddingBottom: 30 }}
+    showsVerticalScrollIndicator={false}
+  >
       <Text style={styles.title}>Home</Text>
+      <Text style={styles.subtitle}>Stay consistent and trust the process</Text>
+
+            {/* Weight progress chart */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Weight Progress</Text>
+
+        <LineChart
+          data={chartData}
+          width={screenWidth - 60}
+          height={220}
+          yAxisSuffix="kg"
+          chartConfig={{
+            backgroundColor: "#ffffff",
+            backgroundGradientFrom: "#ffffff",
+            backgroundGradientTo: "#ffffff",
+            decimalPlaces: 1,
+            color: (opacity = 1) =>
+              `rgba(0,122,255, ${opacity})`,
+            labelColor: (opacity = 1) =>
+              `rgba(28,28,30, ${opacity})`,
+            style: {
+              borderRadius: 16,
+            },
+          }}
+          bezier
+          style={{
+            marginTop: 10,
+            borderRadius: 16,
+          }}
+        />
+
+        <Text style={styles.infoText}>
+          Starting Weight: {startingWeight} kg
+        </Text>
+
+        <Text style={styles.infoText}>
+          Current Weight: {currentWeight} kg
+        </Text>
+
+        <Text style={styles.infoText}>
+          Total Change: {change.toFixed(1)} kg
+        </Text>
+      </View>
 
       <View style={styles.card}>
-        <Text style={styles.label}>Current Weight</Text>
-        <Text style={styles.value}>
-  {currentWeight === "No weight recorded" ? currentWeight : `${currentWeight} kg`}
-</Text>
-
-        <Text style={styles.label}>Target Weight</Text>
-        <Text style={styles.value}>
-  {targetWeight === "Not set" ? targetWeight : `${targetWeight} kg`}
-</Text>
-
-        <Text style={styles.label}>Weight Loss Speed</Text>
-        <Text style={styles.value}>
-  {speed === "Not set" ? speed : `${speed} kg per week`}
-</Text>
-
         <Text style={styles.label}>Daily Calorie Target</Text>
-        <Text style={styles.value}>{targetCalories} kcal/day</Text>
+        <Text style={styles.value}>
+          {savedTargetCalories} kcal
+        </Text>
 
-        <Text style={styles.label}>Consumed Today</Text>
-        <Text style={styles.value}>{consumedCalories} kcal</Text>
-
-        <Text style={styles.label}>Remaining Calories</Text>
-        <Text style={styles.value}>{remainingCalories} kcal</Text>
+        <Text style={styles.label}>Calories Left Today</Text>
+        <Text style={styles.value}>
+          {remainingCalories} kcal
+        </Text>
       </View>
 
       <Pressable
         style={styles.button}
-        onPress={() =>
-          router.push({
-            pathname: '/food-search' as any,
-            params: {
-              ...(params as any),
-            },
-          })
-        }
+        onPress={() => router.push("/food-search" as any)}
       >
         <Text style={styles.buttonText}>Log Food</Text>
       </Pressable>
 
       <Pressable
         style={styles.button}
-        onPress={() =>
-          router.push({
-            pathname: '/progress' as any,
-            params: {
-              ...(params as any),
-            },
-          })
-        }
+        onPress={() => router.push("/activity-hub" as any)}
       >
-        <Text style={styles.buttonText}>View Progress</Text>
+        <Text style={styles.buttonText}>Activity Tracker</Text>
       </Pressable>
 
       <Pressable
         style={styles.buttonSecondary}
-        onPress={() =>
-          router.push({
-            pathname: '/update-weight' as any,
-            params: {
-              ...(params as any),
-            },
-          })
-        }
+        onPress={() => router.push("/update-weight" as any)}
       >
-        <Text style={styles.buttonSecondaryText}>Update Weight</Text>
+        <Text style={styles.buttonSecondaryText}>
+          Update Weight
+        </Text>
       </Pressable>
-      <Pressable style={styles.resetButton} onPress={handleResetData}>
-        <Text style={styles.resetButtonText}>Reset Data</Text>
+
+      <Pressable
+        style={styles.resetButton}
+        onPress={handleResetData}
+      >
+        <Text style={styles.resetButtonText}>
+          Reset Data
+        </Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -196,7 +236,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
     padding: 20,
-    justifyContent: 'center',
   },
   title: {
     fontSize: 28,
@@ -205,24 +244,41 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginBottom: 20,
   },
+    subtitle: {
+    textAlign: "center",
+    color: COLORS.muted,
+    marginBottom: 20,
+    marginTop: 6,
+  },
   card: {
     backgroundColor: COLORS.card,
     borderRadius: 12,
-    padding: 20,
+    padding: 15,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginBottom: 5,
+  },
+  infoText: {
+    fontSize: 15,
+    color: COLORS.text,
+    marginTop: 6,
   },
   label: {
     fontSize: 14,
     color: '#666',
-    marginTop: 10,
+    marginTop: 5,
   },
   value: {
-    fontSize: 20,
+    fontSize: 22,
     color: COLORS.text,
     fontWeight: '600',
-    marginTop: 4,
+    marginTop: 10,
   },
   button: {
     backgroundColor: COLORS.primary,
