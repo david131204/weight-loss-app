@@ -96,6 +96,7 @@ export default function HomeScreen() {
               "targetCalories",
               "weightHistory",
               "foodLog",
+              "activityLog"
             ]);
 
             router.replace("/");
