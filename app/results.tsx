@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 
 const COLORS = {
   primary: '#007AFF',
@@ -72,10 +73,10 @@ export default function Results() {
 <Pressable
   style={styles.button}
   onPress={async () => {
-  await AsyncStorage.setItem("targetWeight", targetWeight.toString());
-  await AsyncStorage.setItem("speed", speed.toString());
-  await AsyncStorage.setItem("targetCalories", targetCalories.toString());
-  await AsyncStorage.setItem("setupComplete", "true");
+  await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.targetWeight), targetWeight.toString());
+  await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.speed), speed.toString());
+  await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.targetCalories), targetCalories.toString());
+  await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.setupComplete), "true");
 
   router.replace('/home');
 }}

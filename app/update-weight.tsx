@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 // Screen for updating user's weight and recalculating calorie targets
 export default function UpdateWeight() {
   const [weight, setWeight] = useState("");
@@ -28,7 +29,7 @@ export default function UpdateWeight() {
   }
 
   try {
-    const existing = await AsyncStorage.getItem("weightHistory");
+    const existing = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.weightHistory));
     let history = existing ? JSON.parse(existing) : [];
 // Create a new weight entry with today's date
     const newEntry = {
@@ -37,15 +38,37 @@ export default function UpdateWeight() {
     };
 
     history.push(newEntry);
-// Save updated weight history and current weight
-await AsyncStorage.setItem("weightHistory", JSON.stringify(history));
-await AsyncStorage.setItem("currentWeight", String(parsedWeight));
-// Retrieve stored user data for recalculating calories
-const height = await AsyncStorage.getItem("height");
-const age = await AsyncStorage.getItem("age");
-const gender = await AsyncStorage.getItem("gender");
-const activity = await AsyncStorage.getItem("activity");
-const speed = await AsyncStorage.getItem("speed");
+// Save updated weight history and current weight for current user
+await AsyncStorage.setItem(
+  getUserStorageKey(STORAGE_KEYS.weightHistory),
+  JSON.stringify(history)
+);
+
+await AsyncStorage.setItem(
+  getUserStorageKey(STORAGE_KEYS.currentWeight),
+  String(parsedWeight)
+);
+
+// Retrieve current user's saved data for recalculating calories
+const height = await AsyncStorage.getItem(
+  getUserStorageKey(STORAGE_KEYS.height)
+);
+
+const age = await AsyncStorage.getItem(
+  getUserStorageKey(STORAGE_KEYS.age)
+);
+
+const gender = await AsyncStorage.getItem(
+  getUserStorageKey(STORAGE_KEYS.gender)
+);
+
+const activity = await AsyncStorage.getItem(
+  getUserStorageKey(STORAGE_KEYS.activity)
+);
+
+const speed = await AsyncStorage.getItem(
+  getUserStorageKey(STORAGE_KEYS.speed)
+);
 
 if (height && age && gender && activity && speed) {
   const h = parseFloat(height);
@@ -73,7 +96,7 @@ if (height && age && gender && activity && speed) {
 // Update daily calorie target
   const newTargetCalories = Math.round(tdee - calorieDeficit);
 
-  await AsyncStorage.setItem("targetCalories", String(newTargetCalories));
+  await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.targetCalories), String(newTargetCalories));
 }
 
 Alert.alert("Success", "Weight saved");

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Keyboard,
@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 
 const COLORS = {
   primary: '#007AFF',
@@ -34,7 +35,9 @@ const [checkingSetup, setCheckingSetup] = useState(true);
 useEffect(() => {
   const checkSetup = async () => {
     try {
-      const setupComplete = await AsyncStorage.getItem("setupComplete");
+      const setupComplete = await AsyncStorage.getItem(
+          getUserStorageKey(STORAGE_KEYS.setupComplete)
+        );
 
       if (setupComplete === "true") {
         router.replace("/home");
@@ -48,7 +51,7 @@ useEffect(() => {
   };
 
   checkSetup();
-}, []);
+  }, [router]);
 
 if (checkingSetup) {
   return null;
@@ -64,11 +67,11 @@ const goToTargetWeight = async () => {
     return;
   }
 // Save initial user data for later use in calculations
-await AsyncStorage.setItem("currentWeight", w.toString());
-await AsyncStorage.setItem("height", h.toString());
-await AsyncStorage.setItem("age", a.toString());
-await AsyncStorage.setItem("gender", gender);
-await AsyncStorage.setItem("activity", activity.toString());
+await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.currentWeight), w.toString());
+await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.height), h.toString());
+await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.age), a.toString());
+await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.gender), gender);
+await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.activity), activity.toString());
 // Navigate to target weight screen with entered data
   router.push({
     pathname: '/target-weight',
@@ -83,133 +86,112 @@ await AsyncStorage.setItem("activity", activity.toString());
 };
 
 return (
-<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-<KeyboardAvoidingView
-style={{ flex: 1 }}
-behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
->
-<View style={styles.container}>
-<Text style={styles.title}>Welcome</Text>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.container}>
+            <Text style={styles.title}>Welcome</Text>
 
-<TextInput
-style={styles.input}
-placeholder="Weight (kg)"
-placeholderTextColor="#666"
-keyboardType="numeric"
-value={weight}
-onChangeText={setWeight}
-/>
+            <TextInput
+              style={styles.input}
+              placeholder="Weight (kg)"
+              placeholderTextColor="#666"
+              keyboardType="numeric"
+              value={weight}
+              onChangeText={setWeight}
+            />
 
-<TextInput
-style={styles.input}
-placeholder="Height (cm)"
-placeholderTextColor="#666"
-keyboardType="numeric"
-value={height}
-onChangeText={setHeight}
-/>
+            <TextInput
+              style={styles.input}
+              placeholder="Height (cm)"
+              placeholderTextColor="#666"
+              keyboardType="numeric"
+              value={height}
+              onChangeText={setHeight}
+            />
 
-<TextInput
-style={styles.input}
-placeholder="Age"
-placeholderTextColor="#666"
-keyboardType="numeric"
-value={age}
-onChangeText={setAge}
-/>
+            <TextInput
+              style={styles.input}
+              placeholder="Age"
+              placeholderTextColor="#666"
+              keyboardType="numeric"
+              value={age}
+              onChangeText={setAge}
+            />
 
-<Text style={styles.label}>Gender</Text>
-<View style={styles.row}>
-<Pressable
-style={[
-styles.option,
-gender === 'male' && styles.selected,
-]}
-onPress={() => setGender('male')}
->
-<Text style={gender === 'male' ? styles.selectedText : styles.optionText}>
-Male
-</Text>
-</Pressable>
+            <Text style={styles.label}>Gender</Text>
+            <View style={styles.row}>
+              <Pressable
+                style={[styles.option, gender === "male" && styles.selected]}
+                onPress={() => setGender("male")}
+              >
+                <Text style={gender === "male" ? styles.selectedText : styles.optionText}>
+                  Male
+                </Text>
+              </Pressable>
 
-<Pressable
-style={[
-styles.option,
-gender === 'female' && styles.selected,
-]}
-onPress={() => setGender('female')}
->
-<Text style={gender === 'female' ? styles.selectedText : styles.optionText}>
-Female
-</Text>
-</Pressable>
-</View>
+              <Pressable
+                style={[styles.option, gender === "female" && styles.selected]}
+                onPress={() => setGender("female")}
+              >
+                <Text style={gender === "female" ? styles.selectedText : styles.optionText}>
+                  Female
+                </Text>
+              </Pressable>
+            </View>
 
-<Text style={styles.label}>Activity Level</Text>
-<View style={styles.row}>
-<Pressable
-style={[
-styles.option,
-activity === 1.2 && styles.selected,
-]}
-onPress={() => setActivity(1.2)}
->
-<Text style={activity === 1.2 ? styles.selectedText : styles.optionText}>
-Low
-</Text>
-</Pressable>
+            <Text style={styles.label}>Activity Level</Text>
+            <View style={styles.row}>
+              <Pressable
+                style={[styles.option, activity === 1.2 && styles.selected]}
+                onPress={() => setActivity(1.2)}
+              >
+                <Text style={activity === 1.2 ? styles.selectedText : styles.optionText}>Low</Text>
+              </Pressable>
 
-<Pressable
-style={[
-styles.option,
-activity === 1.55 && styles.selected,
-]}
-onPress={() => setActivity(1.55)}
->
-<Text style={activity === 1.55 ? styles.selectedText : styles.optionText}>
-Medium
-</Text>
-</Pressable>
+              <Pressable
+                style={[styles.option, activity === 1.55 && styles.selected]}
+                onPress={() => setActivity(1.55)}
+              >
+                <Text style={activity === 1.55 ? styles.selectedText : styles.optionText}>Medium</Text>
+              </Pressable>
 
-<Pressable
-style={[
-styles.option,
-activity === 1.9 && styles.selected,
-]}
-onPress={() => setActivity(1.9)}
->
-<Text style={activity === 1.9 ? styles.selectedText : styles.optionText}>
-High
-</Text>
-</Pressable>
-</View>
+              <Pressable
+                style={[styles.option, activity === 1.9 && styles.selected]}
+                onPress={() => setActivity(1.9)}
+              >
+                <Text style={activity === 1.9 ? styles.selectedText : styles.optionText}>High</Text>
+              </Pressable>
+            </View>
 
-<Pressable style={styles.button} onPress={goToTargetWeight}>
-  <Text style={styles.buttonText}>Continue</Text>
-</Pressable>
-
-</View>
-</KeyboardAvoidingView>
-</TouchableWithoutFeedback>
-);
+            <Pressable style={styles.button} onPress={goToTargetWeight}>
+              <Text style={styles.buttonText}>Continue</Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: 'center',
+    justifyContent: "center",
     backgroundColor: COLORS.background,
   },
-
   title: {
     fontSize: 26,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 25,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.primary,
   },
-
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -218,54 +200,45 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: COLORS.card,
   },
-
   label: {
     marginTop: 10,
     marginBottom: 5,
     fontSize: 16,
     color: COLORS.text,
   },
-
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginBottom: 15,
   },
-
   option: {
     padding: 10,
     borderWidth: 1,
     borderColor: COLORS.primary,
     borderRadius: 8,
     minWidth: 80,
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: COLORS.card,
   },
-
   optionText: {
     color: COLORS.primary,
   },
-
   selected: {
     backgroundColor: COLORS.primary,
   },
-
   selectedText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
-
   button: {
     backgroundColor: COLORS.primary,
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
+    alignItems: "center",
   },
-
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
