@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 
 const COLORS = {
   primary: "#007AFF",
@@ -57,7 +58,7 @@ export default function LogActivity() {
       return;
     }
 
-    const storedWeight = await AsyncStorage.getItem("currentWeight");
+    const storedWeight = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.currentWeight));
     const weight = storedWeight ? parseFloat(storedWeight) : 0;
 
     if (weight <= 0) {
@@ -81,7 +82,7 @@ export default function LogActivity() {
     }
 
     try {
-      const existing = await AsyncStorage.getItem("activityLog");
+      const existing = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.activityLog));
       const activityLog = existing ? JSON.parse(existing) : [];
 
       const newEntry = {
@@ -94,7 +95,7 @@ export default function LogActivity() {
       activityLog.push(newEntry);
 
       await AsyncStorage.setItem(
-        "activityLog",
+        getUserStorageKey(STORAGE_KEYS.activityLog),
         JSON.stringify(activityLog)
       );
 

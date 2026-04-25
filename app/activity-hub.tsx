@@ -1,13 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
+import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 
 const COLORS = {
   primary: "#007AFF",
@@ -31,7 +32,7 @@ export default function ActivityHub() {
     useCallback(() => {
       const loadActivityData = async () => {
         try {
-          const storedActivities = await AsyncStorage.getItem("activityLog");
+          const storedActivities = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.activityLog));
           const activityLog = storedActivities ? JSON.parse(storedActivities) : [];
 
           const today = new Date().toISOString().split("T")[0];
@@ -61,158 +62,306 @@ export default function ActivityHub() {
     }, [])
   );
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 30 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={styles.title}>Activity Tracker</Text>
-      <Text style={styles.subtitle}>
-        Track your exercise and improve your daily calorie balance
-      </Text>
+    return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Today's Summary</Text>
-
-        <Text style={styles.label}>Calories Burned Today</Text>
-        <Text style={styles.value}>{todayBurnedCalories} kcal</Text>
-
-        <Text style={styles.label}>Activities Logged Today</Text>
-        <Text style={styles.value}>{todayActivityCount}</Text>
-      </View>
-
-      {/* Navigation buttons */}
-      <Pressable
-        style={styles.button}
-        onPress={() => router.push("/log-activity" as any)}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.buttonText}>Log Activity</Text>
-      </Pressable>
+        <View style={styles.header}>
+          <Text style={styles.appName}>Activity Hub</Text>
+          <Text style={styles.subtitle}>
+            Track exercise, burn calories, and stay consistent
+          </Text>
+        </View>
 
-      <Pressable
-        style={styles.button}
-        onPress={() => router.push("/activity-tips" as any)}
-      >
-        <Text style={styles.buttonText}>Activity Tips</Text>
-      </Pressable>
+        <View style={styles.summarySection}>
+          <Text style={styles.summaryTitle}>Today's Summary</Text>
 
-      <Pressable
-        style={styles.buttonSecondary}
-        onPress={() => router.push("/home" as any)}
-      >
-        <Text style={styles.buttonSecondaryText}>Back Home</Text>
-      </Pressable>
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryLabel}>Calories Burned</Text>
+              <Text style={styles.summaryValue}>{todayBurnedCalories}</Text>
+              <Text style={styles.summaryUnit}>kcal</Text>
+            </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Recent Activities</Text>
+            <View style={[styles.summaryCard, styles.highlightCard]}>
+              <Text style={styles.summaryLabel}>Activities Logged</Text>
+              <Text style={styles.summaryValue}>{todayActivityCount}</Text>
+              <Text style={styles.summaryUnit}>today</Text>
+            </View>
+          </View>
+        </View>
 
-        {recentActivities.length === 0 ? (
-          <Text style={styles.emptyText}>No activities logged yet</Text>
-        ) : (
-          recentActivities.map((item: any, index: number) => (
-            <View key={index} style={styles.activityItem}>
-              <Text style={styles.activityName}>{item.activity}</Text>
-              <Text style={styles.activityDetails}>
-                {item.minutes} mins • {item.caloriesBurned} kcal • {item.date}
+        <View style={styles.actionsSection}>
+          <Text style={styles.summaryTitle}>Quick Actions</Text>
+
+          <Pressable
+            style={styles.primaryAction}
+            onPress={() => router.push("/log-activity" as any)}
+          >
+            <View>
+              <Text style={styles.primaryActionTitle}>Log Activity</Text>
+              <Text style={styles.primaryActionSubtitle}>
+                Add exercise and calories burned
               </Text>
             </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+            <Text style={styles.actionArrow}>›</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.primaryAction}
+            onPress={() => router.push("/activity-tips" as any)}
+          >
+            <View>
+              <Text style={styles.primaryActionTitle}>Activity Tips</Text>
+              <Text style={styles.primaryActionSubtitle}>
+                Learn simple ways to stay active
+              </Text>
+            </View>
+            <Text style={styles.actionArrow}>›</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.secondaryAction}
+            onPress={() => router.push("/home" as any)}
+          >
+            <Text style={styles.secondaryActionText}>Back Home</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.recentSection}>
+          <Text style={styles.summaryTitle}>Recent Activities</Text>
+
+          <View style={styles.recentCard}>
+            {recentActivities.length === 0 ? (
+              <>
+                <Text style={styles.emptyText}>No activities logged yet</Text>
+                <Text style={styles.emptySubtext}>
+                  Start logging your workouts to see your progress here.
+                </Text>
+              </>
+            ) : (
+              recentActivities.map((item: any, index: number) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.activityItem,
+                    index === recentActivities.length - 1 && styles.lastActivityItem,
+                  ]}
+                >
+                  <View style={styles.activityTopRow}>
+                    <Text style={styles.activityName}>{item.activity}</Text>
+                    <Text style={styles.activityCalories}>
+                      {item.caloriesBurned} kcal
+                    </Text>
+                  </View>
+                  <Text style={styles.activityDetails}>
+                    {item.minutes} mins • {item.date}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>Why activity helps</Text>
+          <Text style={styles.infoText}>
+            Regular movement supports fat loss, improves fitness, and helps you
+            create a more sustainable calorie deficit over time.
+          </Text>
+        </View>
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    padding: 20,
+    backgroundColor: "#eaf1fb",
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
-    color: COLORS.primary,
+    scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
     marginTop: 20,
+    marginBottom: 24,
+  },
+  appName: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: COLORS.text,
+    letterSpacing: -0.8,
   },
   subtitle: {
-    textAlign: "center",
+    fontSize: 15,
     color: COLORS.muted,
     marginTop: 6,
+  },
+  summarySection: {
     marginBottom: 20,
   },
-  card: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: 15,
-  },
-  sectionTitle: {
+  summaryTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: COLORS.text,
-    marginBottom: 10,
-  },
-  label: {
-    fontSize: 14,
-    color: COLORS.muted,
-    marginTop: 6,
-  },
-  value: {
-    fontSize: 22,
     fontWeight: "700",
     color: COLORS.text,
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
     marginBottom: 12,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+  summaryGrid: {
+    gap: 12,
   },
-  buttonSecondary: {
+  summaryCard: {
     backgroundColor: COLORS.card,
-    padding: 15,
-    borderRadius: 8,
+    borderRadius: 20,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  highlightCard: {
+    borderWidth: 1.5,
+    borderColor: "#dbeafe",
+    backgroundColor: "#f8fbff",
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: COLORS.muted,
+    marginBottom: 8,
+  },
+  summaryValue: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: COLORS.text,
+    letterSpacing: -0.6,
+  },
+  summaryUnit: {
+    fontSize: 13,
+    color: COLORS.muted,
+    marginTop: 4,
+  },
+  actionsSection: {
+    marginBottom: 20,
+  },
+  primaryAction: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  primaryActionTitle: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  primaryActionSubtitle: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  actionArrow: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "400",
+    marginLeft: 12,
+  },
+  secondaryAction: {
+    backgroundColor: COLORS.card,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: COLORS.primary,
-    marginBottom: 15,
+    borderColor: "#dbe3ef",
   },
-  buttonSecondaryText: {
-    color: COLORS.primary,
+  secondaryActionText: {
+    color: COLORS.text,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+  },
+  recentSection: {
+    marginBottom: 20,
+  },
+  recentCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 20,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   emptyText: {
     fontSize: 15,
+    color: COLORS.text,
+    fontWeight: "600",
+  },
+  emptySubtext: {
+    fontSize: 14,
     color: COLORS.muted,
-    marginTop: 4,
+    marginTop: 6,
+    lineHeight: 20,
   },
   activityItem: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: "#edf2f7",
+  },
+  lastActivityItem: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+  },
+  activityTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   activityName: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: COLORS.text,
+  },
+  activityCalories: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.primary,
   },
   activityDetails: {
     fontSize: 14,
     color: COLORS.muted,
-    marginTop: 4,
+    marginTop: 5,
+  },
+  infoCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 20,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  infoTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    color: COLORS.muted,
+    lineHeight: 21,
   },
 });
