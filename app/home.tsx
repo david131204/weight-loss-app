@@ -13,6 +13,7 @@ import {
 import { LineChart } from "react-native-chart-kit";
 import { useAuth } from "../context/AuthContext";
 import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
+import { getDailyStreak, getNextMilestone } from "../utils/streak";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -35,6 +36,7 @@ export default function HomeScreen() {
   const [consumedCalories, setConsumedCalories] = useState(0);
   const [burnedCalories, setBurnedCalories] = useState(0);
   const { logout } = useAuth();
+  const [dailyStreak, setDailyStreak] = useState(0);
 // Reload data whenever the screen is opened or focused
   useFocusEffect(
     useCallback(() => {
@@ -53,6 +55,9 @@ export default function HomeScreen() {
               setSavedWeight(currentWeightValue);
             }
           }
+
+          const today = new Date().toISOString().split("T")[0];
+
 // Load today's burned calories from saved activity log
           const activityData = await AsyncStorage.getItem(
             getUserStorageKey(STORAGE_KEYS.activityLog)
@@ -73,13 +78,14 @@ export default function HomeScreen() {
           const foodData = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.foodLog));
           const foodLog = foodData ? JSON.parse(foodData) : [];
 
-          const today = new Date().toISOString().split("T")[0];
-
           const todayCalories = foodLog
            .filter((item: any) => item.date === today)
            .reduce((sum: number, item: any) => sum + item.calories, 0);
 
           setConsumedCalories(todayCalories);
+
+          const streak = await getDailyStreak();
+          setDailyStreak(streak);
         } catch (error) {
           console.log("Failed to load data");
         }
@@ -112,6 +118,8 @@ export default function HomeScreen() {
               getUserStorageKey(STORAGE_KEYS.weightHistory),
               getUserStorageKey(STORAGE_KEYS.foodLog),
               getUserStorageKey(STORAGE_KEYS.activityLog),
+              getUserStorageKey(STORAGE_KEYS.dailyStreak),
+              getUserStorageKey(STORAGE_KEYS.lastStreakDate),
               ]);
 
             router.replace("/");
@@ -133,19 +141,32 @@ const remainingCalories =
       : Number(savedWeight || 0);
 
   const change = currentWeight - startingWeight;
+  const nextMilestone = getNextMilestone(dailyStreak);
 
   // Chart data
+
+const recentHistory = history.slice(-4);
+
+const formatChartDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
+};
+
   const chartData = {
     labels:
-      history.length > 0
-        ? history.map((item: any) => item.date)
+      recentHistory.length > 0
+        ? recentHistory.map((item: any) => formatChartDate(item.date))
         : ["Start"],
     datasets: [
       {
         data:
-          history.length > 0
-            ? history.map((item: any) => item.weight)
-            : [Number(savedWeight || 0)],
+          recentHistory.length > 0
+            ? recentHistory.map((item: any) => item.weight)
+            : [Number(savedWeight || 0)], 
       },
     ],
   };
@@ -162,6 +183,40 @@ return (
       <Text style={styles.appName}>LeanPath</Text>
       <Text style={styles.subtitle}>Stay consistent and trust the process</Text>
     </View>
+
+<View style={styles.streakCard}>
+  <View style={styles.streakTopRow}>
+    <View style={styles.streakIconBox}>
+      <Text style={styles.streakIcon}>🔥</Text>
+    </View>
+
+    <View style={styles.streakTextBox}>
+      <Text style={styles.streakLabel}>Daily Streak</Text>
+      <Text style={styles.streakValue}>
+        {dailyStreak} Day{dailyStreak === 1 ? "" : "s"}
+      </Text>
+    </View>
+  </View>
+
+  <View style={styles.streakProgressBackground}>
+    <View
+      style={[
+        styles.streakProgressFill,
+        {
+          width: nextMilestone
+            ? `${Math.min((dailyStreak / nextMilestone) * 100, 100)}%`
+            : "100%",
+        },
+      ]}
+    />
+  </View>
+
+  <Text style={styles.streakSubtext}>
+    {nextMilestone
+      ? `${nextMilestone - dailyStreak} day${nextMilestone - dailyStreak === 1 ? "" : "s"} until your ${nextMilestone} day milestone`
+      : "Milestone completed. Keep the streak alive"}
+  </Text>
+</View>
 
     <View style={styles.chartCard}>
       <View style={styles.cardHeaderRow}>
@@ -420,6 +475,66 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     marginTop: 4,
   },
+
+streakCard: {
+  backgroundColor: COLORS.card,
+  borderRadius: 24,
+  padding: 20,
+  marginBottom: 20,
+  shadowColor: "#000",
+  shadowOpacity: 0.06,
+  shadowRadius: 12,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 3,
+},
+streakTopRow: {
+  flexDirection: "row",
+  alignItems: "center",
+},
+streakIconBox: {
+  width: 54,
+  height: 54,
+  borderRadius: 18,
+  backgroundColor: "#fff3e8",
+  justifyContent: "center",
+  alignItems: "center",
+  marginRight: 14,
+},
+streakIcon: {
+  fontSize: 30,
+},
+streakTextBox: {
+  flex: 1,
+},
+streakLabel: {
+  fontSize: 14,
+  color: COLORS.muted,
+  marginBottom: 4,
+},
+streakValue: {
+  fontSize: 30,
+  fontWeight: "800",
+  color: COLORS.text,
+  letterSpacing: -0.6,
+},
+streakProgressBackground: {
+  height: 10,
+  backgroundColor: "#e5e7eb",
+  borderRadius: 999,
+  marginTop: 18,
+  overflow: "hidden",
+},
+streakProgressFill: {
+  height: "100%",
+  backgroundColor: "#ff7a00",
+  borderRadius: 999,
+},
+streakSubtext: {
+  fontSize: 13,
+  color: COLORS.primary,
+  marginTop: 12,
+  fontWeight: "600",
+},
   actionsSection: {
     marginBottom: 18,
   },

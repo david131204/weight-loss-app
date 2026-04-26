@@ -2,17 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-    Alert,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableWithoutFeedback,
-    View,
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
+import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 
 const COLORS = {
   primary: "#007AFF",
@@ -68,7 +69,7 @@ export default function FoodDetailScreen() {
     }
 
     try {
-      const existing = await AsyncStorage.getItem("foodLog");
+      const existing = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.foodLog));
       const foodLog = existing ? JSON.parse(existing) : [];
 
       const newEntry = {
@@ -84,7 +85,7 @@ export default function FoodDetailScreen() {
 
       foodLog.push(newEntry);
 
-      await AsyncStorage.setItem("foodLog", JSON.stringify(foodLog));
+      await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.foodLog), JSON.stringify(foodLog));
 
       Alert.alert("Success", "Food added to log");
       router.replace("/home");

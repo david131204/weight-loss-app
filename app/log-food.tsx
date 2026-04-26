@@ -12,7 +12,8 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-
+import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
+import { updateDailyStreak } from "../utils/streak";
 const COLORS = {
   primary: '#007AFF',
   background: '#eef6ff',
@@ -41,8 +42,10 @@ export default function LogFoodScreen() {
   }
 
   try {
-    const existing = await AsyncStorage.getItem("foodLog");
+    const existing = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.foodLog));
     const foodLog = existing ? JSON.parse(existing) : [];
+
+    await updateDailyStreak();
 // Create new food entry with today's date
     const newEntry = {
       name: foodName,
@@ -52,7 +55,7 @@ export default function LogFoodScreen() {
 
     foodLog.push(newEntry);
 
-    await AsyncStorage.setItem("foodLog", JSON.stringify(foodLog));
+    await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.foodLog), JSON.stringify(foodLog));
 
     setFoodName('');
     setFoodCalories('');

@@ -76,7 +76,17 @@ export default function Results() {
   await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.targetWeight), targetWeight.toString());
   await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.speed), speed.toString());
   await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.targetCalories), targetCalories.toString());
-  await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.setupComplete), "true");
+
+  const startingEntry = {
+  weight: weight,
+  date: new Date().toISOString().split("T")[0],
+};
+  await AsyncStorage.setItem(
+  getUserStorageKey(STORAGE_KEYS.weightHistory),
+  JSON.stringify([startingEntry])
+);
+
+await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.setupComplete), "true");
 
   router.replace('/home');
 }}

@@ -18,4 +18,6 @@ export const STORAGE_KEYS = {
   weightHistory: "weightHistory",
   foodLog: "foodLog",
   activityLog: "activityLog",
+  dailyStreak: "dailyStreak",
+  lastStreakDate: "lastStreakDate",
 };

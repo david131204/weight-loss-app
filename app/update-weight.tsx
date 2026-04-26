@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
+import { updateDailyStreak } from "../utils/streak";
 // Screen for updating user's weight and recalculating calorie targets
 export default function UpdateWeight() {
   const [weight, setWeight] = useState("");
@@ -98,6 +99,8 @@ if (height && age && gender && activity && speed) {
 
   await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.targetCalories), String(newTargetCalories));
 }
+
+await updateDailyStreak();
 
 Alert.alert("Success", "Weight saved");
  // Return to Home to reflect updated values

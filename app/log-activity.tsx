@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
+import { updateDailyStreak } from "../utils/streak";
 
 const COLORS = {
   primary: "#007AFF",
@@ -98,6 +99,8 @@ export default function LogActivity() {
         getUserStorageKey(STORAGE_KEYS.activityLog),
         JSON.stringify(activityLog)
       );
+
+      await updateDailyStreak();
 
       Alert.alert("Success", "Activity saved");
       router.replace("/activity-hub");
