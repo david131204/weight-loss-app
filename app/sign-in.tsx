@@ -1,5 +1,5 @@
 import { Link, Stack, useRouter } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import {
   Alert,
@@ -42,6 +42,23 @@ export default function SignInScreen() {
     }
   };
 
+  const handlePasswordReset = async () => {
+  if (!email) {
+    Alert.alert("Missing email", "Please enter your email address first.");
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    Alert.alert(
+      "Password reset sent",
+      "Check your email for a password reset link."
+    );
+  } catch (error: any) {
+    Alert.alert("Error", error.message);
+  }
+};
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -72,6 +89,10 @@ export default function SignInScreen() {
               {loading ? "Signing in..." : "Sign In"}
             </Text>
           </Pressable>
+
+          <Pressable onPress={handlePasswordReset}>
+  <Text style={styles.forgotText}>Forgot password?</Text>
+</Pressable>
 
           <Link href="/sign-up" style={styles.link}>
             Don’t have an account? Sign up
@@ -143,4 +164,10 @@ const styles = StyleSheet.create({
   marginTop: 4,
   fontWeight: "600",
 },
+forgotText: {
+  color: COLORS.primary,
+  textAlign: "center",
+  marginTop: 15,
+  fontSize: 15,
+}
 });
