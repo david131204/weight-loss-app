@@ -68,6 +68,14 @@ export default function Results() {
 
         <Text style={styles.label}>Selected Speed</Text>
         <Text style={styles.value}>{speed} kg per week</Text>
+            </View>
+
+      <View style={styles.disclaimerBox}>
+        <Text style={styles.disclaimerTitle}>Important</Text>
+        <Text style={styles.disclaimerText}>
+          Calorie targets are estimates only and do not replace medical advice.
+          If you have health conditions or specific dietary needs, consult a healthcare professional.
+        </Text>
       </View>
 
 <Pressable
@@ -140,5 +148,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+    disclaimerBox: {
+    backgroundColor: "#fff7e6",
+    borderWidth: 1,
+    borderColor: "#facc15",
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 16,
+  },
+  disclaimerTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#92400e",
+    marginBottom: 6,
+  },
+  disclaimerText: {
+    fontSize: 13,
+    color: "#78350f",
+    lineHeight: 18,
   },
 });

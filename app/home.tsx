@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -287,6 +288,12 @@ return (
           <Text style={styles.summaryUnit}>kcal</Text>
         </View>
 
+          <View style={styles.summaryCard}>
+           <Text style={styles.summaryLabel}>Burned</Text>
+    <Text style={styles.summaryValue}>{burnedCalories}</Text>
+    <Text style={styles.summaryUnit}>kcal</Text>
+  </View>
+
         <View style={[styles.summaryCard, styles.highlightCard]}>
           <Text style={styles.summaryLabel}>Remaining</Text>
           <Text style={styles.summaryValue}>{remainingCalories}</Text>
@@ -299,29 +306,37 @@ return (
       <Text style={styles.summaryTitle}>Quick Actions</Text>
 
       <Pressable
-        style={styles.primaryAction}
-        onPress={() => router.push("/food-search" as any)}
-      >
-        <View>
-          <Text style={styles.primaryActionTitle}>Log Food</Text>
-          <Text style={styles.primaryActionSubtitle}>
-            Add meals and track calories
-          </Text>
-        </View>
-        <Text style={styles.actionArrow}>›</Text>
-      </Pressable>
+  style={styles.primaryAction}
+  onPress={() => router.push("/food-search" as any)}
+>
+  <View style={styles.actionContent}>
+    <Ionicons name="fast-food-outline" size={24} color="#fff" />
 
-      <Pressable
-        style={styles.primaryAction}
-        onPress={() => router.push("/activity-hub" as any)}
-      >
-        <View>
-          <Text style={styles.primaryActionTitle}>Activity Hub</Text>
-          <Text style={styles.primaryActionSubtitle}>
-            Log exercise and stay active
-          </Text>
-        </View>
-        <Text style={styles.actionArrow}>›</Text>
+    <View>
+      <Text style={styles.primaryActionTitle}>Log Food</Text>
+      <Text style={styles.primaryActionSubtitle}>
+        Add meals and track calories
+      </Text>
+    </View>
+  </View>
+
+  <Text style={styles.actionArrow}>›</Text>
+</Pressable>
+
+<Pressable
+  style={styles.primaryAction}
+  onPress={() => router.push("/activity-hub" as any)}
+>
+        <View style={styles.actionContent}>
+  <Ionicons name="walk-outline" size={24} color="#fff" />
+  <View>
+    <Text style={styles.primaryActionTitle}>Activity Hub</Text>
+    <Text style={styles.primaryActionSubtitle}>
+      Log exercise and stay active
+    </Text>
+  </View>
+</View>
+<Text style={styles.actionArrow}>›</Text>
       </Pressable>
 
       <Pressable
@@ -588,4 +603,9 @@ streakSubtext: {
     fontSize: 15,
     fontWeight: "600",
   },
+  actionContent: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+},
 });
