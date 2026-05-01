@@ -18,7 +18,7 @@ const COLORS = {
   text: "#1c1c1e",
   muted: "#666",
 };
-// sign up
+
 export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
