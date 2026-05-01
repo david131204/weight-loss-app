@@ -1,171 +1,241 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 import { updateDailyStreak } from "../utils/streak";
+
+const COLORS = {
+  primary: "#007AFF",
+  background: "#eaf1fb",
+  card: "#ffffff",
+  text: "#1c1c1e",
+  border: "#d0d7de",
+  muted: "#666",
+};
+
 // Screen for updating user's weight and recalculating calorie targets
 export default function UpdateWeight() {
   const [weight, setWeight] = useState("");
   const router = useRouter();
-// Save new weight and update related data
+
+  // Save new weight and update related data
   const handleSave = async () => {
-  if (!weight.trim()) {
-    Alert.alert("Error", "Please enter your weight");
-    return;
-  }
+    const parsedWeight = parseFloat(weight);
 
-  const parsedWeight = parseFloat(weight);
+    if (!weight.trim() || isNaN(parsedWeight) || parsedWeight <= 0) {
+      Alert.alert("Error", "Please enter a valid weight");
+      return;
+    }
 
-  if (isNaN(parsedWeight)) {
-    Alert.alert("Error", "Enter a valid number");
-    return;
-  }
+    try {
+      const existing = await AsyncStorage.getItem(
+        getUserStorageKey(STORAGE_KEYS.weightHistory)
+      );
+      const history = existing ? JSON.parse(existing) : [];
 
-  try {
-    const existing = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.weightHistory));
-    let history = existing ? JSON.parse(existing) : [];
-// Create a new weight entry with today's date
-    const newEntry = {
-      weight: parsedWeight,
-      date: new Date().toISOString().split("T")[0],
-    };
+      // Add new weight entry to history
+      history.push({
+        weight: parsedWeight,
+        date: new Date().toISOString().split("T")[0],
+      });
 
-    history.push(newEntry);
-// Save updated weight history and current weight for current user
-await AsyncStorage.setItem(
-  getUserStorageKey(STORAGE_KEYS.weightHistory),
-  JSON.stringify(history)
-);
+      await AsyncStorage.setItem(
+        getUserStorageKey(STORAGE_KEYS.weightHistory),
+        JSON.stringify(history)
+      );
 
-await AsyncStorage.setItem(
-  getUserStorageKey(STORAGE_KEYS.currentWeight),
-  String(parsedWeight)
-);
+      await AsyncStorage.setItem(
+        getUserStorageKey(STORAGE_KEYS.currentWeight),
+        String(parsedWeight)
+      );
 
-// Retrieve current user's saved data for recalculating calories
-const height = await AsyncStorage.getItem(
-  getUserStorageKey(STORAGE_KEYS.height)
-);
+      // Recalculate calorie target using updated weight
+      const height = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.height));
+      const age = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.age));
+      const gender = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.gender));
+      const activity = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.activity));
+      const speed = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.speed));
 
-const age = await AsyncStorage.getItem(
-  getUserStorageKey(STORAGE_KEYS.age)
-);
+      if (height && age && gender && activity && speed) {
+        const h = parseFloat(height);
+        const a = parseFloat(age);
+        const act = parseFloat(activity);
+        const s = parseFloat(speed);
 
-const gender = await AsyncStorage.getItem(
-  getUserStorageKey(STORAGE_KEYS.gender)
-);
+        const bmr =
+          gender === "male"
+            ? 10 * parsedWeight + 6.25 * h - 5 * a + 5
+            : 10 * parsedWeight + 6.25 * h - 5 * a - 161;
 
-const activity = await AsyncStorage.getItem(
-  getUserStorageKey(STORAGE_KEYS.activity)
-);
+        const deficit = s === 1 ? 1000 : 500;
+        const newTargetCalories = Math.round(bmr * act - deficit);
 
-const speed = await AsyncStorage.getItem(
-  getUserStorageKey(STORAGE_KEYS.speed)
-);
+        await AsyncStorage.setItem(
+          getUserStorageKey(STORAGE_KEYS.targetCalories),
+          String(newTargetCalories)
+        );
+      }
 
-if (height && age && gender && activity && speed) {
-  const h = parseFloat(height);
-  const a = parseFloat(age);
-  const act = parseFloat(activity);
-  const s = parseFloat(speed);
+      await updateDailyStreak();
 
-  let bmr = 0;
-// Recalculate BMR using updated weight
-  if (gender === "male") {
-    bmr = 10 * parsedWeight + 6.25 * h - 5 * a + 5;
-  } else {
-    bmr = 10 * parsedWeight + 6.25 * h - 5 * a - 161;
-  }
-// Calculate TDEE using activity level
-  const tdee = bmr * act;
-
-  let calorieDeficit = 0;
-// Apply deficit based on weight loss speed
-  if (s === 0.5) {
-    calorieDeficit = 500;
-  } else if (s === 1) {
-    calorieDeficit = 1000;
-  }
-// Update daily calorie target
-  const newTargetCalories = Math.round(tdee - calorieDeficit);
-
-  await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.targetCalories), String(newTargetCalories));
-}
-
-await updateDailyStreak();
-
-Alert.alert("Success", "Weight saved");
- // Return to Home to reflect updated values
-router.replace("/home");
-  } catch (error) {
-    Alert.alert("Error", "Failed to save weight");
-  }
-};
+      Alert.alert("Success", "Weight saved");
+      router.replace("/home");
+    } catch (error) {
+      Alert.alert("Error", "Failed to save weight");
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Update Weight</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={20} color={COLORS.primary} />
+            <Text style={styles.backText}>Back</Text>
+          </Pressable>
 
-      <Text style={styles.label}>Enter your current weight (kg)</Text>
+          <Text style={styles.title}>Update Weight</Text>
+          <Text style={styles.subtitle}>
+            Record your latest weight to update your progress and calorie target.
+          </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. 92.5"
-        keyboardType="numeric"
-        value={weight}
-        onChangeText={setWeight}
-      />
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Current weight</Text>
+            <Text style={styles.helperText}>
+              This will be added to your weight history.
+            </Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>Save Weight</Text>
-      </TouchableOpacity>
-    </View>
+            <View style={styles.inputRow}>
+              <Ionicons name="scale-outline" size={20} color={COLORS.muted} />
+              <TextInput
+                style={styles.input}
+                placeholder="Example: 92.5"
+                placeholderTextColor={COLORS.muted}
+                keyboardType="numeric"
+                value={weight}
+                onChangeText={setWeight}
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+            </View>
+          </View>
+
+          <Pressable style={styles.button} onPress={handleSave}>
+            <Text style={styles.buttonText}>Save Weight</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f172a",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+  content: {
     padding: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    marginBottom: 18,
+  },
+  backText: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: "600",
   },
   title: {
-    fontSize: 28,
-    color: "white",
-    marginBottom: 30,
+    fontSize: 32,
+    fontWeight: "800",
+    color: COLORS.text,
   },
-  label: {
-    color: "#cbd5f5",
-    marginBottom: 10,
-    fontSize: 16,
+  subtitle: {
+    fontSize: 15,
+    color: COLORS.muted,
+    marginTop: 6,
+    marginBottom: 20,
+    lineHeight: 21,
+  },
+  card: {
+    backgroundColor: COLORS.card,
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+  helperText: {
+    fontSize: 14,
+    color: COLORS.muted,
+    marginTop: 6,
+    marginBottom: 14,
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    backgroundColor: "#fff",
   },
   input: {
-    backgroundColor: "white",
-    width: "100%",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    color: COLORS.text,
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#22c55e",
-    padding: 15,
-    borderRadius: 8,
-    width: "100%",
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    padding: 18,
     alignItems: "center",
   },
   buttonText: {
-    color: "white",
-    fontSize: 16,
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });

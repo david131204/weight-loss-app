@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -7,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,13 +19,13 @@ import { getUserStorageKey, STORAGE_KEYS } from "../utils/storage";
 
 const COLORS = {
   primary: "#007AFF",
-  background: "#eef6ff",
+  background: "#eaf1fb",
   card: "#ffffff",
   text: "#1c1c1e",
   border: "#d0d7de",
+  muted: "#666",
 };
 
-// Screen for entering portion size and calculating nutrition
 export default function FoodDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -36,17 +38,11 @@ export default function FoodDetailScreen() {
   const carbsPer100g = Number(params.carbsPer100g);
   const fatPer100g = Number(params.fatPer100g);
 
-  // Calculate nutrition values based on entered grams
   const nutrition = useMemo(() => {
     const gramsValue = parseFloat(grams);
 
     if (isNaN(gramsValue) || gramsValue <= 0) {
-      return {
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-      };
+      return { calories: 0, protein: 0, carbs: 0, fat: 0 };
     }
 
     const factor = gramsValue / 100;
@@ -59,17 +55,18 @@ export default function FoodDetailScreen() {
     };
   }, [grams, caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g]);
 
-  // Save selected food entry to food log
   const addToLog = async () => {
     const gramsValue = parseFloat(grams);
 
     if (isNaN(gramsValue) || gramsValue <= 0) {
-      Alert.alert("Error", "Please enter a valid weight in grams");
+      Alert.alert("Error", "Please enter a valid weight in grams.");
       return;
     }
 
     try {
-      const existing = await AsyncStorage.getItem(getUserStorageKey(STORAGE_KEYS.foodLog));
+      const existing = await AsyncStorage.getItem(
+        getUserStorageKey(STORAGE_KEYS.foodLog)
+      );
       const foodLog = existing ? JSON.parse(existing) : [];
 
       const newEntry = {
@@ -85,117 +82,303 @@ export default function FoodDetailScreen() {
 
       foodLog.push(newEntry);
 
-      await AsyncStorage.setItem(getUserStorageKey(STORAGE_KEYS.foodLog), JSON.stringify(foodLog));
+      await AsyncStorage.setItem(
+        getUserStorageKey(STORAGE_KEYS.foodLog),
+        JSON.stringify(foodLog)
+      );
 
-      Alert.alert("Success", "Food added to log");
+      Alert.alert("Success", "Food added to log.");
       router.replace("/home");
     } catch (error) {
-      Alert.alert("Error", "Failed to save food entry");
+      Alert.alert("Error", "Failed to save food entry.");
     }
   };
 
- return (
-  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.container}>
-      <Text style={styles.title}>{name}</Text>
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={20} color={COLORS.primary} />
+            <Text style={styles.backButtonText}>Back</Text>
+          </Pressable>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Per 100 g</Text>
-        <Text style={styles.value}>Calories: {caloriesPer100g} kcal</Text>
-        <Text style={styles.value}>Protein: {proteinPer100g} g</Text>
-        <Text style={styles.value}>Carbs: {carbsPer100g} g</Text>
-        <Text style={styles.value}>Fat: {fatPer100g} g</Text>
-      </View>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter grams eaten"
-        placeholderTextColor="#666"
-        keyboardType="numeric"
-        value={grams}
-        onChangeText={setGrams}
-        returnKeyType="done"
-        onSubmitEditing={Keyboard.dismiss}
-      />
-
-      <View style={styles.card}>
-        <Text style={styles.label}>For {grams || 0} g</Text>
-        <Text style={styles.value}>
-          Calories: {nutrition.calories.toFixed(1)} kcal
-        </Text>
-        <Text style={styles.value}>
-          Protein: {nutrition.protein.toFixed(1)} g
-        </Text>
-        <Text style={styles.value}>
-          Carbs: {nutrition.carbs.toFixed(1)} g
-        </Text>
-        <Text style={styles.value}>
-          Fat: {nutrition.fat.toFixed(1)} g
-        </Text>
-      </View>
-
-      <Pressable style={styles.button} onPress={addToLog}>
-        <Text style={styles.buttonText}>Add to Log</Text>
-      </Pressable>
+          <View style={styles.header}>
+            <Text style={styles.title}>{name}</Text>
+            <Text style={styles.subtitle}>
+              Enter your portion size to calculate calories and macros.
+            </Text>
           </View>
-    </KeyboardAvoidingView>
-  </TouchableWithoutFeedback>
-);
+
+          <View style={styles.card}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardTitle}>Nutrition per 100g</Text>
+              <Text style={styles.sectionBadge}>Reference</Text>
+            </View>
+
+            <View style={styles.macroGrid}>
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>
+                  {Math.round(caloriesPer100g)}
+                </Text>
+                <Text style={styles.macroLabel}>kcal</Text>
+              </View>
+
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>
+                  {proteinPer100g.toFixed(1)}g
+                </Text>
+                <Text style={styles.macroLabel}>protein</Text>
+              </View>
+
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>{carbsPer100g.toFixed(1)}g</Text>
+                <Text style={styles.macroLabel}>carbs</Text>
+              </View>
+
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>{fatPer100g.toFixed(1)}g</Text>
+                <Text style={styles.macroLabel}>fat</Text>
+              </View>
+            </View>
+
+            <Text style={styles.noteText}>
+              Values are estimates per 100g of edible portion.
+            </Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Portion eaten</Text>
+
+            <View style={styles.inputRow}>
+              <Ionicons name="scale-outline" size={20} color={COLORS.muted} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter grams eaten"
+                placeholderTextColor={COLORS.muted}
+                keyboardType="numeric"
+                value={grams}
+                onChangeText={setGrams}
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardTitle}>For {grams || 0}g</Text>
+              <Text style={styles.sectionBadge}>Calculated</Text>
+            </View>
+
+            <View style={styles.macroGrid}>
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>
+                  {nutrition.calories.toFixed(1)}
+                </Text>
+                <Text style={styles.macroLabel}>kcal</Text>
+              </View>
+
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>
+                  {nutrition.protein.toFixed(1)}g
+                </Text>
+                <Text style={styles.macroLabel}>protein</Text>
+              </View>
+
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>
+                  {nutrition.carbs.toFixed(1)}g
+                </Text>
+                <Text style={styles.macroLabel}>carbs</Text>
+              </View>
+
+              <View style={styles.macroBox}>
+                <Text style={styles.macroValue}>
+                  {nutrition.fat.toFixed(1)}g
+                </Text>
+                <Text style={styles.macroLabel}>fat</Text>
+              </View>
+            </View>
+          </View>
+
+          <Pressable style={styles.primaryAction} onPress={addToLog}>
+            <View style={styles.actionContent}>
+              <Ionicons name="add-circle-outline" size={24} color="#fff" />
+              <View>
+                <Text style={styles.primaryActionTitle}>Add to Log</Text>
+                <Text style={styles.primaryActionSubtitle}>
+                  Save this food to today’s summary
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.actionArrow}>›</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  scrollContent: {
     padding: 20,
-    justifyContent: "center",
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    marginBottom: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  backButtonText: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  header: {
+    marginBottom: 20,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "700",
-    textAlign: "center",
-    color: COLORS.primary,
-    marginBottom: 20,
+    fontSize: 30,
+    fontWeight: "800",
+    color: COLORS.text,
+    letterSpacing: -0.8,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: COLORS.muted,
+    marginTop: 6,
+    lineHeight: 21,
   },
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderRadius: 24,
+    padding: 16,
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
-  label: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 10,
+  cardHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+    gap: 10,
   },
-  value: {
-    fontSize: 16,
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
     color: COLORS.text,
-    marginBottom: 6,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: COLORS.card,
-    marginBottom: 20,
+  sectionBadge: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.primary,
+    backgroundColor: "#e8f1ff",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: 15,
-    borderRadius: 8,
+  macroGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  macroBox: {
+    width: "47.5%",
+    backgroundColor: "#f8fafc",
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
     alignItems: "center",
   },
-  buttonText: {
-    color: "#fff",
+  macroValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: COLORS.text,
+  },
+  macroLabel: {
+    fontSize: 12,
+    color: COLORS.muted,
+    marginTop: 4,
+  },
+  noteText: {
+    fontSize: 13,
+    color: COLORS.muted,
+    marginTop: 14,
+    lineHeight: 19,
+  },
+  inputRow: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    color: COLORS.text,
     fontSize: 16,
-    fontWeight: "600",
+  },
+  primaryAction: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  actionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  primaryActionTitle: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  primaryActionSubtitle: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  actionArrow: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "400",
+    marginLeft: 12,
   },
 });
