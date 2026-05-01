@@ -9,6 +9,7 @@ function RootNavigator() {
   const router = useRouter();
 
   useEffect(() => {
+    // Redirect users based on authentication state (protect routes).
     if (loading) return;
 
     const currentRoute = segments[0];

@@ -27,6 +27,7 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
+    // Check that all fields are completed before creating the account.
     if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert("Missing details", "Please complete all fields.");
       return;
@@ -44,6 +45,7 @@ export default function SignUpScreen() {
 
     try {
       setLoading(true);
+       // Create the user account with Firebase, then return to the setup flow.
       await createUserWithEmailAndPassword(auth, email.trim(), password);
       router.replace("/");
     } catch (error: any) {

@@ -26,6 +26,7 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
+     // Validate the login form before sending the sign-in request.
     if (!email.trim() || !password.trim()) {
       Alert.alert("Missing details", "Please enter your email and password.");
       return;
@@ -43,6 +44,7 @@ export default function SignInScreen() {
   };
 
   const handlePasswordReset = async () => {
+     // Send a Firebase password reset email to the address entered by the user.
   if (!email) {
     Alert.alert("Missing email", "Please enter your email address first.");
     return;
