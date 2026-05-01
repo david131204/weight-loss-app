@@ -1,149 +1,268 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
 
 const COLORS = {
-  primary: '#007AFF',
-  background: '#eef6ff',
-  card: '#ffffff',
-  text: '#1c1c1e',
-  border: '#d0d7de',
+  primary: "#007AFF",
+  background: "#eaf1fb",
+  card: "#ffffff",
+  text: "#1c1c1e",
+  border: "#d0d7de",
+  muted: "#666",
 };
-// Screen where user selects how fast they want to lose weight
-export default function GoalSpeed() {
 
+export default function GoalSpeed() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
   const [speed, setSpeed] = useState<number | null>(null);
 
- const continueNext = () => {
-  if (!speed) {
-    alert('Please select a weight loss speed');
-    return;
-  }
+  const continueNext = () => {
+    if (!speed) {
+      alert("Please select a weight loss speed");
+      return;
+    }
 
-  router.push({
-    pathname: '/results',
-    params: {
-      ...(params as any),
-      speed: speed.toString(),
-    },
-  });
-};
+    router.push({
+      pathname: "/results",
+      params: {
+        ...(params as any),
+        speed: speed.toString(),
+      },
+    });
+  };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={COLORS.primary} />
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
 
-        <Text style={styles.title}>Weight Loss Speed</Text>
-
-        <Text style={styles.subtitle}>
-          Choose how fast you want to lose weight
-        </Text>
-
-        <Pressable
-          style={[
-            styles.option,
-            speed === 0.5 && styles.selected
-          ]}
-          onPress={() => setSpeed(0.5)}
-        >
-          <Text style={speed === 0.5 ? styles.selectedText : styles.optionText}>
-            0.5 kg per week
+        <View style={styles.header}>
+          <Text style={styles.title}>Weight Loss Speed</Text>
+          <Text style={styles.subtitle}>
+            Choose how fast you want to lose weight each week.
           </Text>
-        </Pressable>
+        </View>
 
-        <Pressable
-          style={[
-            styles.option,
-            speed === 1 && styles.selected
-          ]}
-          onPress={() => setSpeed(1)}
-        >
-          <Text style={speed === 1 ? styles.selectedText : styles.optionText}>
-            1 kg per week
+        <View style={styles.card}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardTitle}>Select speed</Text>
+            <Text style={styles.sectionBadge}>Step 3</Text>
+          </View>
+
+          <Text style={styles.helperText}>
+            Faster weight loss requires a larger calorie deficit.
           </Text>
-        </Pressable>
 
-        <Pressable style={styles.button} onPress={continueNext}>
-          <Text style={styles.buttonText}>Continue</Text>
-        </Pressable>
+          <Pressable
+            style={[
+              styles.optionCard,
+              speed === 0.5 && styles.selectedCard,
+            ]}
+            onPress={() => setSpeed(0.5)}
+          >
+            <Text style={speed === 0.5 ? styles.selectedText : styles.optionTitle}>
+              0.5 kg per week
+            </Text>
+            <Text style={speed === 0.5 ? styles.selectedSub : styles.optionSub}>
+              Steady and sustainable
+            </Text>
+          </Pressable>
 
-      </View>
+          <Pressable
+            style={[
+              styles.optionCard,
+              speed === 1 && styles.selectedCard,
+            ]}
+            onPress={() => setSpeed(1)}
+          >
+            <Text style={speed === 1 ? styles.selectedText : styles.optionTitle}>
+              1 kg per week
+            </Text>
+            <Text style={speed === 1 ? styles.selectedSub : styles.optionSub}>
+              Faster results, more aggressive
+            </Text>
+          </Pressable>
+        </View>
+
+        <Pressable style={styles.primaryAction} onPress={continueNext}>
+          <View style={styles.actionContent}>
+            <Ionicons name="arrow-forward-circle-outline" size={24} color="#fff" />
+            <View>
+              <Text style={styles.primaryActionTitle}>Continue</Text>
+              <Text style={styles.primaryActionSubtitle}>
+                View your calorie plan
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.actionArrow}>›</Text>
+        </Pressable>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
     backgroundColor: COLORS.background,
   },
-
-  title: {
-    fontSize: 26,
-    textAlign: 'center',
-    marginBottom: 20,
-    fontWeight: '600',
-    color: COLORS.primary,
+  scrollContent: {
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
-
+  backButton: {
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    marginBottom: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  backButtonText: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: COLORS.text,
+    letterSpacing: -0.8,
+  },
   subtitle: {
-    textAlign: 'center',
-    marginBottom: 30,
+    fontSize: 15,
+    color: COLORS.muted,
+    marginTop: 6,
+    lineHeight: 21,
+  },
+  card: {
+    backgroundColor: COLORS.card,
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  cardHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
     color: COLORS.text,
   },
-
-  option: {
-    padding: 15,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: 8,
-    marginBottom: 15,
-    alignItems: 'center',
-    backgroundColor: COLORS.card,
-  },
-
-  optionText: {
+  sectionBadge: {
+    fontSize: 12,
+    fontWeight: "600",
     color: COLORS.primary,
-    fontSize: 16,
+    backgroundColor: "#e8f1ff",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
-
-  selected: {
+  helperText: {
+    fontSize: 14,
+    color: COLORS.muted,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  optionCard: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 12,
+  },
+  selectedCard: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
-
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.text,
+  },
+  optionSub: {
+    fontSize: 13,
+    color: COLORS.muted,
+    marginTop: 4,
+  },
   selectedText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-
-  buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "700",
   },
-
+  selectedSub: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  primaryAction: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  actionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  primaryActionTitle: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  primaryActionSubtitle: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  actionArrow: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "400",
+    marginLeft: 12,
+  },
 });
